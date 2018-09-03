@@ -1,6 +1,6 @@
 package org.ermain.scala.akka.akka_messenger
 
-import akka.actor.Actor
+import akka.actor.{Actor, Status}
 import akka.event.Logging
 import AkkaMessages._
 
@@ -16,7 +16,19 @@ class AcademyDB extends Actor {
       log.info(s"Received SetRequest -- key: $key value: $value")
       map.put(key, value)
     }
+    case GetRequest(key)  =>  {
+      log.info(s"Received GetRequest -- $key")
+      val response = map.get(key)
 
-    case o    =>    log.info(s"Received unknown message: $o")
+      response match {
+        case Some(x)  => sender() ! x
+        case None     => sender() ! Status.Failure(new KeyNotFoundException(key))
+      }
+    }
+
+    case o    =>    {
+      log.info(s"Received unknown message: $o")
+      Status.Failure(new ClassNotFoundException)
+    }
   }
 }
